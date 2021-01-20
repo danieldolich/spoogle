@@ -10,7 +10,6 @@ const router = express.Router();
  * @return {string} The generated string
  */
 
-
 router.get('/login', spotController.reqAuth, (req, res) =>  res.redirect(res.locals.spotRedirect));
 
 router.get('/callback/', spotController.getAuth, (req, res) => res.status(200).cookie('token', res.locals.authorization).redirect('http://localhost:8080'));
