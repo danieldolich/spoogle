@@ -1,11 +1,7 @@
 const fetch = require('node-fetch');
 const querystring = require('query-string');
 const FormData = require('form-data');
-<<<<<<< HEAD
 const { client_id, client_secret, redirect_uri } = require('./spotifySecret');
-=======
-const { client_id, client_secret, redirect_uri } = require('./spotifySecret')
->>>>>>> e445fb0dd8dd028ce40440370f301c580a880e36
 
 const spotController = {};
 
@@ -26,7 +22,7 @@ spotController.reqAuth = (req, res, next) => {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  const scope = 'streaming user-read-private user-read-email';
+  const scope = 'streaming user-read-private user-read-email user-library-modify user-library-read';
 
   const spotifyRedirect = `https://accounts.spotify.com/authorize?${querystring.stringify({
     response_type: 'code',
@@ -145,14 +141,20 @@ spotController.getToken = (req, res, next) => {
   })
     .then((data) => data.text())
     .then((json) => JSON.parse(json))
-    .then((result) => (res.locals.authToken = result.access_token, next()))
+    .then((result) => {
+      // res.locals.authToken = result.access_token;
+      res.cookie('authToken', result.access_token, {
+        maxAge: 3600000,
+      });
+      next();
+    })
     .catch((err) => next(err));
 };
 
 spotController.getRecs = (req, res, next) => {
   const query = `https://api.spotify.com/v1/recommendations?limit=25&${querystring.stringify(req.query)}`;
   console.log(query);
-  fetch(query, { headers: { Authorization: `Bearer ${res.locals.authToken}` } })
+  fetch(query, { headers: { Authorization: `Bearer ${req.cookies.authToken}` } })
     .then((data) => data.json())
     .then((data) => {
       res.locals.queryResults = data.tracks;
@@ -161,6 +163,12 @@ spotController.getRecs = (req, res, next) => {
     .catch((err) => next(err));
 };
 
-spotController.getSpecs = (req, res, next) => next();
+spotController.getFavs = (req, res, next) => next();
+
+// spotController.addFavs = (req, res, next) => {
+
+//   fetch()
+//   return next();
+// }
 
 module.exports = spotController;

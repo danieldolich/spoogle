@@ -107,21 +107,53 @@ const App = () => {
       .then(data => {
         console.log(data);
         setResults(data);
-      });
+        return data;
+      })
+      .then(data => {
+        const authToken = cookies.get('token');
+        const trackArr = data.map(track => track.id);
+        const queryIds = trackArr.join();
+        fetch(`https://api.spotify.com/v1/me/tracks/contains?ids=${queryIds}`, {
+          headers: { 'Authorization': "Bearer " + authToken }
+        })
+        .then(data => data.json())
+        .then(data => {
+          console.log(trackArr.filter((track, i) => data[i]));
+          setFavorites(trackArr.filter((track, i) => data[i]));
+        })
+      })
   }
 
   const toggleFavorite = (trackId, isFavorite) => {
+    const authToken = cookies.get('token');
     if (isFavorite) {
       const copy = favorites.slice();
       for (let i = 0; i < copy.length; i++) {
         if (trackId === copy[i]) {
           copy.splice(i, 1);
+          //delete request
+          fetch(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': "Bearer " + authToken,
+              'content-type': 'application/json'
+            }
+          })
+      .catch(err => console.log(err));
           break;
         }
       }
       setFavorites(copy);
 
     } else {
+      //add request
+      fetch(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+        method: 'PUT',
+        headers: {'Authorization': "Bearer " + authToken,
+                  'content-type': 'application/json'
+        }
+      })
+      .catch(err => console.log(err));
       setFavorites([...favorites, trackId]);
     }
   }
