@@ -1,7 +1,11 @@
 const fetch = require('node-fetch');
 const querystring = require('query-string');
 const FormData = require('form-data');
+<<<<<<< HEAD
 const { client_id, client_secret, redirect_uri } = require('./spotifySecret');
+=======
+const { client_id, client_secret, redirect_uri } = require('./spotifySecret')
+>>>>>>> e445fb0dd8dd028ce40440370f301c580a880e36
 
 const spotController = {};
 
