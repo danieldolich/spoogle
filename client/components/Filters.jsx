@@ -23,12 +23,24 @@ function Filters(props) {
     props.onChangeFunc(props.id, newValue)
     setValue(newValue);
   };
+
+  const handleReset = () => {
+    let max = props.parameterObj.max;
+    let min = props.parameterObj.min;
+    let newValue = [min, max];
+    console.log(newValue)
+    props.onChangeFunc(props.id, newValue)
+    setValue(newValue);
+  };
+
+
   return (
     <div className="sliding">
       <Typography id="range-slider" className="tooltip" gutterBottom>
         {props.parameterObj.displayName}
         <span className="tooltiptext">{props.parameterObj.description}</span>
       </Typography>
+      <button onClick={handleReset}>RESET</button>
       <Slider
         color="secondary"
         value={value}

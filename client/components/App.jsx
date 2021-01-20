@@ -75,6 +75,7 @@ const App = () => {
   };
 
   const submitSearch = (state) => {
+    console.log(state)
     if (!state.genreInput) return;
     const theQueryObj = { seed_genres: state.genreInput };
     for (let i = 0; i< state.values.length; i++) {
