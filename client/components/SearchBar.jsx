@@ -43,7 +43,6 @@ class SearchBar extends Component {
     let newInput;
     if (e.target) newInput = e.target.value;
     else newInput = e;
-
     return this.setState({...this.state, genreInput: newInput});
   }
 
