@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 
 const getAlbumCover = (track) => {
   const albumImages = track.album.images;
@@ -16,6 +17,8 @@ const getArtists = (track) => {
   return artists;
 }
 
+
+
 const convertDuration = (durationInMs) => {
   const totalSeconds = Math.floor(durationInMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -24,7 +27,7 @@ const convertDuration = (durationInMs) => {
   return `${minutes}:${seconds}`;
 }
 
-const SearchResultRow = ({ track, togglePlay, isPlaying, favorites, toggleFavorite }) => {
+const SearchResultRow = ({ track, togglePlay, isPlaying, favorites, toggleFavorite, hidePlaylists, getPlaylists }) => {
   const isFavorite = favorites.indexOf(track.id) > -1;
 
   return (
@@ -37,6 +40,7 @@ const SearchResultRow = ({ track, togglePlay, isPlaying, favorites, toggleFavori
         <div>{track.name}</div>
         <div>by {getArtists(track)}</div>
       </div>
+      <AddPlaylist onClick={(e) => getPlaylists(e, track.uri)} >&#43;</AddPlaylist>
       <div className="duration-col">{convertDuration(track.duration_ms)}</div>
       <div
         className={`like-col ${isFavorite ? "favorite" : ""}`}
@@ -51,3 +55,17 @@ const SearchResultRow = ({ track, togglePlay, isPlaying, favorites, toggleFavori
 }
 
 export default SearchResultRow;
+
+// styled components
+
+const AddPlaylist = styled.div`
+  text-align: center;
+  padding-top: .2rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  &:hover {
+    cursor: pointer;
+    border: 1px solid black;
+    border-radius: 100%;
+  }
+`;

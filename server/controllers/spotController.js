@@ -22,7 +22,7 @@ spotController.reqAuth = (req, res, next) => {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  const scope = 'streaming user-read-private user-read-email user-library-modify user-library-read';
+  const scope = 'streaming user-read-private user-read-email user-library-modify user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
 
   const spotifyRedirect = `https://accounts.spotify.com/authorize?${querystring.stringify({
     response_type: 'code',

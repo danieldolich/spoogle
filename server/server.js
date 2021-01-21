@@ -49,7 +49,16 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-
+app.use((err, req, res, next) => {
+    const defaultErr = {
+      log: 'Express error handler caught unknown middleware error',
+      status: 500,
+      message: { err: 'An error occurred' },
+    };
+    const errorObj = Object.assign({}, defaultErr, err);
+    console.log(errorObj.log);
+    return res.status(errorObj.status).json(errorObj.message);
+  });
 
 // catch-all route handler for requests to an unknown route
 app.use((req, res) => res.status(404).send("You're looking for something that doesn't exist. Try a real route, dude"))

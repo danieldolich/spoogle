@@ -1,12 +1,17 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import './../../styles.css';
 import SearchResultRow from './SearchResultRow.jsx';
+import SearchBar from './SearchBar.jsx';
+import querystring from 'query-string';
+import Cookies from 'universal-cookie';
+import styled from 'styled-components';
 import SearchBar from './SearchBar.jsx'
 import CachedResults from './CachedResults.jsx'
 import querystring from 'query-string'
 import Cookies from 'universal-cookie'
 
 const cookies = new Cookies();
+
 const App = () => {
   const [ results, setResults ] = useState([]);
   const [ favorites, setFavorites ] = useState([]);
@@ -15,6 +20,9 @@ const App = () => {
   const [ token, setToken ] = useState(cookies.get('token'));
   const [ currentTrack, setCurrentTrack ] = useState(undefined);
   const [ isPlaying, setIsPlaying ] = useState(false);
+  const [hidePlaylists, setHidePlaylists] = useState(true);
+  const [playlists, setPlaylists] = useState([]);
+  const [trackURI, setTrackURI] = useState('');
   const [ cacheRender, setCacheRender] = useState([]);
   // ex) state: { results : [] }, if "setResults" method is invoked, the results arr
   // will be updated with elements
@@ -89,6 +97,39 @@ const App = () => {
       });
     }
   };
+
+  const getPlaylists = (e, trackURI) => {
+    if (hidePlaylists) {
+      setHidePlaylists(false);
+      setTrackURI(trackURI);
+      //Get a list of the current user's playlists
+      const authToken = cookies.get('token');
+      fetch('https://api.spotify.com/v1/me/playlists', {
+        headers: {'Authorization': "Bearer " + authToken}
+      })
+      .then(data => data.json())
+      .then(data => {
+        console.log(data);
+        setPlaylists(data.items); 
+      })
+      .catch(err => console.log(err));
+    } else setHidePlaylists(true);
+  }
+
+  const handlePlaylistSubmit = (e) => {
+    e.preventDefault();
+    const selectedIndex = e.target['0'].options.selectedIndex;
+    const authToken = cookies.get('token');
+    fetch(`https://api.spotify.com/v1/playlists/${playlists[selectedIndex].id}/tracks?uris=${trackURI}`, {
+      method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+    })
+    .catch(err => console.log(err));
+  };
+
   // onclick to submit search of w/e parameters
   // results is an array of tracks
   const submitSearch = (state) => {
@@ -201,6 +242,8 @@ const App = () => {
       togglePlay={togglePlay}
       favorites={favorites}
       toggleFavorite={toggleFavorite}
+      getPlaylists={getPlaylists}
+      hidePlaylists={hidePlaylists}
     />
   ));
   const login = []
@@ -220,6 +263,16 @@ const App = () => {
         {cacheRender}
         </div>
         <SearchBar key='searchbar1' submitSearch={submitSearch} />
+        <PlaylistDisplay hidden={hidePlaylists}>
+          <Form onSubmit={(e) => handlePlaylistSubmit(e)}>
+            <UserPlaylists>
+              {playlists.map(pl => (
+                <Playlists key={pl.name} id={pl.id}>{pl.name}</Playlists>
+              ))};
+            </UserPlaylists>
+              <input type='submit' value='Add to playlist' />
+          </Form>
+        </PlaylistDisplay>
       <div className="results-grid">
         {resultsRows}
       </div>
@@ -228,3 +281,34 @@ const App = () => {
 }
 
 export default App;
+
+
+//styled components
+
+const PlaylistDisplay = styled.div `
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  height: 12rem;
+  width: 12rem;
+  border: 1px solid black;
+  background-color: white;
+  z-index: 2;
+  display: ${props => props.hidden ? 'none' : 'initial'};
+`;
+
+//options in the drop down
+const Playlists = styled.option`
+  
+  width: fit-content;
+`;
+
+//creates a drop down list
+const UserPlaylists = styled.select` 
+  width: fit-content;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+`;
