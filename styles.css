@@ -3,6 +3,11 @@
   --border-color: rgb(204, 204, 204);
 }
 
+/* .stories-container {
+  height: 53px;
+  width: 130px;
+} */
+
 body {
   font-family: sans-serif;
 }
@@ -194,6 +199,10 @@ body {
     font-size: medium;
     border-radius: 2em;
 
+  }
+
+  .imageStories{
+    border-radius: 92%;
   }
   
   .theSpoogle:hover {
