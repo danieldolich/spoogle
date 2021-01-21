@@ -40,6 +40,7 @@ const SearchResultRow = ({ track, togglePlay, isPlaying, favorites, toggleFavori
         <div>{track.name}</div>
         <div>by {getArtists(track)}</div>
       </div>
+      <span>Add to playlist</span>
       <AddPlaylist onClick={(e) => getPlaylists(e, track.uri)} >&#43;</AddPlaylist>
       <div className="duration-col">{convertDuration(track.duration_ms)}</div>
       <div
@@ -65,7 +66,9 @@ const AddPlaylist = styled.div`
   min-height: 1.5rem;
   &:hover {
     cursor: pointer;
-    border: 1px solid black;
+    border: 1px solid #4285F4;
     border-radius: 100%;
+    background-color: #4285F4;
+    color: white;
   }
 `;
