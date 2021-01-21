@@ -115,6 +115,7 @@ const App = () => {
 
   const handlePlaylistSubmit = (e) => {
     e.preventDefault();
+    setHidePlaylists(true);
     const selectedIndex = e.target['0'].options.selectedIndex;
     const authToken = cookies.get('token');
     fetch(`https://api.spotify.com/v1/playlists/${playlists[selectedIndex].id}/tracks?uris=${trackURI}`, {
@@ -267,7 +268,7 @@ const App = () => {
                 <Playlists key={pl.name} id={pl.id}>{pl.name}</Playlists>
               ))};
             </UserPlaylists>
-              <input type='submit' value='Add to playlist' />
+              <PlaylistButton type='submit' value='Add to playlist' />
           </Form>
         </PlaylistDisplay>
       <div className="results-grid">
@@ -286,26 +287,41 @@ const PlaylistDisplay = styled.div `
   position: fixed;
   top: 50%;
   left: 50%;
-  height: 12rem;
-  width: 12rem;
-  border: 1px solid black;
+  height: 3rem;
+  width: fit-content;
+  border: 2px solid #4285F4;
   background-color: white;
+  padding: 18px;
   z-index: 2;
-  display: ${props => props.hidden ? 'none' : 'initial'};
+  display: ${props => props.hidden ? 'none' : 'flex'};
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 3px 3px 3px darkgrey;
+  border-radius: 2em;
 `;
 
 //options in the drop down
 const Playlists = styled.option`
-  
   width: fit-content;
 `;
 
 //creates a drop down list
 const UserPlaylists = styled.select` 
-  width: fit-content;
+  width: 9rem;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
+`;
+
+const PlaylistButton = styled.input`
+  font-family: sans-serif;
+  background-color: white;
+  border-color: #4285F4;
+  &:hover {
+    background-color: #4285F4;
+    color: white;
+  }
 `;
