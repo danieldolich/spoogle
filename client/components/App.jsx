@@ -5,10 +5,7 @@ import SearchBar from './SearchBar.jsx';
 import querystring from 'query-string';
 import Cookies from 'universal-cookie';
 import styled from 'styled-components';
-import SearchBar from './SearchBar.jsx'
 import CachedResults from './CachedResults.jsx'
-import querystring from 'query-string'
-import Cookies from 'universal-cookie'
 
 const cookies = new Cookies();
 
