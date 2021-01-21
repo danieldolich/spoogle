@@ -5,6 +5,10 @@ import SearchBar from './SearchBar.jsx';
 import querystring from 'query-string';
 import Cookies from 'universal-cookie';
 import styled from 'styled-components';
+import SearchBar from './SearchBar.jsx'
+import CachedResults from './CachedResults.jsx'
+import querystring from 'query-string'
+import Cookies from 'universal-cookie'
 
 const cookies = new Cookies();
 
@@ -19,7 +23,18 @@ const App = () => {
   const [hidePlaylists, setHidePlaylists] = useState(true);
   const [playlists, setPlaylists] = useState([]);
   const [trackURI, setTrackURI] = useState('');
+  const [ cacheRender, setCacheRender] = useState([]);
+  // ex) state: { results : [] }, if "setResults" method is invoked, the results arr
+  // will be updated with elements
 
+  // define a new hook result cache with state value of this hook with a method cache
+  const [resultsCache, setResultsCache] = useState([]);
+  
+  
+
+  // display previous results
+
+  // basically component did mount
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://sdk.scdn.co/spotify-player.js';
@@ -53,7 +68,11 @@ const App = () => {
       player.connect();
     };
   }, []);
+  // ^ so atm it's just an empty array but it can be another func that can be invoked
+  // and if invoked, will run useEffect again. 
+  
 
+  // user controls playing and pausing current song
   const togglePlay = (trackURI) => {
     if (trackURI !== currentTrack) {
       fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
@@ -111,6 +130,8 @@ const App = () => {
     .catch(err => console.log(err));
   };
 
+  // onclick to submit search of w/e parameters
+  // results is an array of tracks
   const submitSearch = (state) => {
     console.log(state)
     if (!state.genreInput) return;
@@ -143,6 +164,24 @@ const App = () => {
       .then(data => data.json())
       .then(data => {
         console.log(data);
+        // data is arr
+        // make a shallow copy of w/e data is rn
+        let previousCache = [...resultsCache];
+        // previousCache = [];
+        previousCache.push(data);
+        
+
+        //
+        let previousCacheRender = [...cacheRender]
+        previousCacheRender.push(<CachedResults data={data}/>)
+        setCacheRender(previousCacheRender);
+        // previousCache = [[{track1}, {track2}, etc...]]
+        // resultsCache = [[{track1}, {track2}, etc...]]
+
+        // Round 2
+        // previousCache = [[{track1}, {track2}, etc...]]
+        // previousCache = [[{newtrack1}, {newtrack2}], [{track1}, {track2}, etc...]]
+        setResultsCache(previousCache);
         setResults(data);
         return data;
       })
@@ -212,10 +251,17 @@ const App = () => {
     login.push(<div className='LoginLink' ><a  href='http://localhost:3000/apiSpot/login'> Login to Spotify for playback</a></div>)
   }
 
+
   return (
     <Fragment key='appfragment'>
         {login}
+     
         <img id="Spoogo" src="client/assets/logo.svg" />
+        <h4>brought you by danger ramen 🍜</h4>
+        <h4 className="result-stories">Your Saved Results</h4>
+        <div className="stories-container">
+        {cacheRender}
+        </div>
         <SearchBar key='searchbar1' submitSearch={submitSearch} />
         <PlaylistDisplay hidden={hidePlaylists}>
           <Form onSubmit={(e) => handlePlaylistSubmit(e)}>
