@@ -8,10 +8,9 @@ function CachedResults(props) {
     return albumImages[albumImages.length - 1].url;
   } 
 
-
-console.log('data passed into Cached Result', props.data)
+console.log('data passed into Cached Result', props.index)
     return (
-        <img display="inline-block" src={getAlbumCover(props.data[0])} width="50px" className="imageStories"></img>
+        <img display="inline-block" src={getAlbumCover(props.data[0])} width="50px" className="imageStories" onClick={() => props.clickedPopover(props.data)} ></img>
     );
   }
 
