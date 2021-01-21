@@ -43,14 +43,17 @@ class SearchBar extends Component {
     let newInput;
     if (e.target) newInput = e.target.value;
     else newInput = e;
-
     return this.setState({...this.state, genreInput: newInput});
   }
 
   render() {
     const sliders = [];
-    
+    // Rules:
+    // state can be changed in the filters.jsx but not here?
+    // 
     for (let i = 0; i < this.state.searchParameters.length; i += 1) {
+      // only passing down 2 things to filter which are the param values - aka we'll know what the mins and maxes are 
+      // the stuff of that the user actually affects is the this.state.values
       sliders.push(<Filters key={'slider'+i} id={i} parameterObj={this.state.searchParameters[i]} values={this.state.values[i]} onChangeFunc={this.handleChange} />);
     }
 
@@ -60,6 +63,7 @@ class SearchBar extends Component {
         <GenreDrop onChangeFunc={this.genreInputHandler} />
         </div>
         <div className="searchParams">
+        {/* each "slider" contains key, id, param obj and also a mini reset button */}
         {sliders}
         </div>
         <button className='theSpoogle' onClick={() => { this.props.submitSearch(this.state) }} >Let's SPOOGLE it!</button> 

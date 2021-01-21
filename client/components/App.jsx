@@ -1,11 +1,14 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import './../../styles.css';
 import SearchResultRow from './SearchResultRow.jsx';
-import SearchBar from './SearchBar.jsx'
-import querystring from 'query-string'
-import Cookies from 'universal-cookie'
+import SearchBar from './SearchBar.jsx';
+import querystring from 'query-string';
+import Cookies from 'universal-cookie';
+import styled from 'styled-components';
+import CachedResults from './CachedResults.jsx'
 
 const cookies = new Cookies();
+
 const App = () => {
   const [ results, setResults ] = useState([]);
   const [ favorites, setFavorites ] = useState([]);
@@ -14,8 +17,21 @@ const App = () => {
   const [ token, setToken ] = useState(cookies.get('token'));
   const [ currentTrack, setCurrentTrack ] = useState(undefined);
   const [ isPlaying, setIsPlaying ] = useState(false);
-  const [resultsCache, setResultsCache] = useState([])
+  const [hidePlaylists, setHidePlaylists] = useState(true);
+  const [playlists, setPlaylists] = useState([]);
+  const [trackURI, setTrackURI] = useState('');
+  const [ cacheRender, setCacheRender] = useState([]);
+  // ex) state: { results : [] }, if "setResults" method is invoked, the results arr
+  // will be updated with elements
 
+  // define a new hook result cache with state value of this hook with a method cache
+  const [resultsCache, setResultsCache] = useState([]);
+  
+  
+
+  // display previous results
+
+  // basically component did mount
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://sdk.scdn.co/spotify-player.js';
@@ -49,7 +65,11 @@ const App = () => {
       player.connect();
     };
   }, []);
+  // ^ so atm it's just an empty array but it can be another func that can be invoked
+  // and if invoked, will run useEffect again. 
+  
 
+  // user controls playing and pausing current song
   const togglePlay = (trackURI) => {
     if (trackURI !== currentTrack) {
       fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
@@ -75,6 +95,40 @@ const App = () => {
     }
   };
 
+  const getPlaylists = (e, trackURI) => {
+    if (hidePlaylists) {
+      setHidePlaylists(false);
+      setTrackURI(trackURI);
+      //Get a list of the current user's playlists
+      const authToken = cookies.get('token');
+      fetch('https://api.spotify.com/v1/me/playlists', {
+        headers: {'Authorization': "Bearer " + authToken}
+      })
+      .then(data => data.json())
+      .then(data => {
+        console.log(data);
+        setPlaylists(data.items); 
+      })
+      .catch(err => console.log(err));
+    } else setHidePlaylists(true);
+  }
+
+  const handlePlaylistSubmit = (e) => {
+    e.preventDefault();
+    const selectedIndex = e.target['0'].options.selectedIndex;
+    const authToken = cookies.get('token');
+    fetch(`https://api.spotify.com/v1/playlists/${playlists[selectedIndex].id}/tracks?uris=${trackURI}`, {
+      method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+    })
+    .catch(err => console.log(err));
+  };
+
+  // onclick to submit search of w/e parameters
+  // results is an array of tracks
   const submitSearch = (state) => {
     console.log(state)
     if (!state.genreInput) return;
@@ -106,26 +160,73 @@ const App = () => {
     fetch('/apiSpot/rec?'+ querystring.stringify(theQueryObj))
       .then(data => data.json())
       .then(data => {
+        console.log(data);
+        // data is arr
+        // make a shallow copy of w/e data is rn
         let previousCache = [...resultsCache];
+        // previousCache = [];
         previousCache.push(data);
+        
+
+        //
+        let previousCacheRender = [...cacheRender]
+        previousCacheRender.push(<CachedResults data={data}/>)
+        setCacheRender(previousCacheRender);
+        // previousCache = [[{track1}, {track2}, etc...]]
+        // resultsCache = [[{track1}, {track2}, etc...]]
+
+        // Round 2
+        // previousCache = [[{track1}, {track2}, etc...]]
+        // previousCache = [[{newtrack1}, {newtrack2}], [{track1}, {track2}, etc...]]
         setResultsCache(previousCache);
         setResults(data);
-        console.log(resultsCache);
-      });
+        return data;
+      })
+      .then(data => {
+        const authToken = cookies.get('token');
+        const trackArr = data.map(track => track.id);
+        const queryIds = trackArr.join();
+        fetch(`https://api.spotify.com/v1/me/tracks/contains?ids=${queryIds}`, {
+          headers: { 'Authorization': "Bearer " + authToken }
+        })
+        .then(data => data.json())
+        .then(data => {
+          console.log(trackArr.filter((track, i) => data[i]));
+          setFavorites(trackArr.filter((track, i) => data[i]));
+        })
+      })
   }
 
   const toggleFavorite = (trackId, isFavorite) => {
+    const authToken = cookies.get('token');
     if (isFavorite) {
       const copy = favorites.slice();
       for (let i = 0; i < copy.length; i++) {
         if (trackId === copy[i]) {
           copy.splice(i, 1);
+          //delete request
+          fetch(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': "Bearer " + authToken,
+              'content-type': 'application/json'
+            }
+          })
+      .catch(err => console.log(err));
           break;
         }
       }
       setFavorites(copy);
 
     } else {
+      //add request
+      fetch(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+        method: 'PUT',
+        headers: {'Authorization': "Bearer " + authToken,
+                  'content-type': 'application/json'
+        }
+      })
+      .catch(err => console.log(err));
       setFavorites([...favorites, trackId]);
     }
   }
@@ -138,6 +239,8 @@ const App = () => {
       togglePlay={togglePlay}
       favorites={favorites}
       toggleFavorite={toggleFavorite}
+      getPlaylists={getPlaylists}
+      hidePlaylists={hidePlaylists}
     />
   ));
   const login = []
@@ -145,11 +248,28 @@ const App = () => {
     login.push(<div className='LoginLink' ><a  href='http://localhost:3000/apiSpot/login'> Login to Spotify for playback</a></div>)
   }
 
+
   return (
     <Fragment key='appfragment'>
         {login}
+     
         <img id="Spoogo" src="client/assets/logo.svg" />
+        <h4>brought you by danger ramen 🍜</h4>
+        <h4 className="result-stories">Your Saved Results</h4>
+        <div className="stories-container">
+        {cacheRender}
+        </div>
         <SearchBar key='searchbar1' submitSearch={submitSearch} />
+        <PlaylistDisplay hidden={hidePlaylists}>
+          <Form onSubmit={(e) => handlePlaylistSubmit(e)}>
+            <UserPlaylists>
+              {playlists.map(pl => (
+                <Playlists key={pl.name} id={pl.id}>{pl.name}</Playlists>
+              ))};
+            </UserPlaylists>
+              <input type='submit' value='Add to playlist' />
+          </Form>
+        </PlaylistDisplay>
       <div className="results-grid">
         {resultsRows}
       </div>
@@ -158,3 +278,34 @@ const App = () => {
 }
 
 export default App;
+
+
+//styled components
+
+const PlaylistDisplay = styled.div `
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  height: 12rem;
+  width: 12rem;
+  border: 1px solid black;
+  background-color: white;
+  z-index: 2;
+  display: ${props => props.hidden ? 'none' : 'initial'};
+`;
+
+//options in the drop down
+const Playlists = styled.option`
+  
+  width: fit-content;
+`;
+
+//creates a drop down list
+const UserPlaylists = styled.select` 
+  width: fit-content;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+`;
