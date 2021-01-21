@@ -67,7 +67,6 @@ class SearchBar extends Component {
         {sliders}
         </div>
         <button className='theSpoogle' onClick={() => { this.props.submitSearch(this.state) }} >Let's SPOOGLE it!</button> 
-        <button onClick={()=>{this.handleReset()}}>RESET ALL</button>
       </Fragment>
     )
   }

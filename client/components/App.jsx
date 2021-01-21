@@ -6,6 +6,8 @@ import querystring from 'query-string';
 import Cookies from 'universal-cookie';
 import styled from 'styled-components';
 import CachedResults from './CachedResults.jsx'
+import Popover from '@material-ui/core/Popover';
+
 
 const cookies = new Cookies();
 
@@ -21,11 +23,15 @@ const App = () => {
   const [playlists, setPlaylists] = useState([]);
   const [trackURI, setTrackURI] = useState('');
   const [ cacheRender, setCacheRender] = useState([]);
+  const [popoverRender, setPopoverValue] = useState(undefined);
+
+  
+  const [isPopoverOpen, setPopover] = useState(false);
   // ex) state: { results : [] }, if "setResults" method is invoked, the results arr
   // will be updated with elements
 
   // define a new hook result cache with state value of this hook with a method cache
-  const [resultsCache, setResultsCache] = useState([]);
+  const [cacheOfPreviousTracks, setCacheOfPreviousTracks] = useState([]);
   
   
 
@@ -131,7 +137,6 @@ const App = () => {
   // onclick to submit search of w/e parameters
   // results is an array of tracks
   const submitSearch = (state) => {
-    console.log(state)
     if (!state.genreInput) return;
     const theQueryObj = { seed_genres: state.genreInput };
     for (let i = 0; i< state.values.length; i++) {
@@ -161,26 +166,43 @@ const App = () => {
     fetch('/apiSpot/rec?'+ querystring.stringify(theQueryObj))
       .then(data => data.json())
       .then(data => {
-        console.log(data);
+        
         // data is arr
         // make a shallow copy of w/e data is rn
-        let previousCache = [...resultsCache];
-        // previousCache = [];
-        previousCache.push(data);
+        let previousCache = [...cacheOfPreviousTracks];  //previous search array of tracks
+        let previousCacheRender = [...cacheRender]; // previous rendered components album cover  
+
+        previousCache.push(data); //add new data to our 
         
 
         //
-        let previousCacheRender = [...cacheRender]
-        previousCacheRender.push(<CachedResults data={data}/>)
-        setCacheRender(previousCacheRender);
+        
+          //these are the little alb cover components
+        
+
+
         // previousCache = [[{track1}, {track2}, etc...]]
         // resultsCache = [[{track1}, {track2}, etc...]]
 
         // Round 2
         // previousCache = [[{track1}, {track2}, etc...]]
         // previousCache = [[{newtrack1}, {newtrack2}], [{track1}, {track2}, etc...]]
-        setResultsCache(previousCache);
-        setResults(data);
+
+      
+        // this is where all the state updates should be happening
+        console.log("_________________")
+        console.log(previousCache);
+        setCacheOfPreviousTracks(previousCache);
+        console.log('storage state below');
+        console.log(cacheOfPreviousTracks);
+        console.log("_________________")
+
+
+        setResults(data); //original search render
+        setCacheRender(previousCacheRender); //sets the new state of the added album cover
+      
+        previousCacheRender.push(<CachedResults clickedPopover = {clickPopover} index={cacheOfPreviousTracks} data={data}/>)
+
         return data;
       })
       .then(data => {
@@ -243,17 +265,59 @@ const App = () => {
       getPlaylists={getPlaylists}
       hidePlaylists={hidePlaylists}
     />
+
   ));
   const login = []
   if (!cookies.get('token')) {
     login.push(<div className='LoginLink' ><a  href='http://localhost:3000/apiSpot/login'> Login to Spotify for playback</a></div>)
   }
 
+  
+ 
+  const clickPopover = ((info) => {
+console.log('here')    
+    let cachedRows = info.map((track, index) => (
+      <SearchResultRow
+      key={`searchResult${index}`}
+      track={track}
+      isPlaying={(track.uri === currentTrack) && isPlaying}
+      togglePlay={togglePlay}
+      favorites={favorites}
+      toggleFavorite={toggleFavorite}
+      getPlaylists={getPlaylists}
+      hidePlaylists={hidePlaylists}
+    />
+    ))
+    console.log('hello')    
+    setPopoverValue(cachedRows);
+    setPopover(true);
+  })
+
+  const clostPopOver = () => {
+    setPopover(false)
+  }
+
+
 
   return (
     <Fragment key='appfragment'>
         {login}
-     
+        <Popover
+          open = {isPopoverOpen} 
+          onClick = {clostPopOver}
+          anchorOrigin={{
+            vertical: 'center',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'center',
+            horizontal: 'center',
+          }}
+        >
+          {popoverRender}
+        </Popover>
+  
+
         <img id="Spoogo" src="client/assets/logo.svg" />
         <h4>brought you by danger ramen 🍜</h4>
         <h4 className="result-stories">Your Saved Results</h4>
