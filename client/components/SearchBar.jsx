@@ -9,7 +9,7 @@ class SearchBar extends Component {
     super(props)
     this.state = {
       genreInput: '',
-      // artistInput: '',
+      defaultValues: [[0,100],[0,100],[0,220],[0,100],[0,100],[0,15]],
       values: [[0,100],[0,100],[0,220],[0,100],[0,100],[0,15]],
       searchParameters : [ 
         {spotifyName: "_danceability", displayName: "Danceability",description: "A little side-step or in the mood to salsa?",min: 0,max: 100,},
@@ -22,6 +22,15 @@ class SearchBar extends Component {
     }
     this.handleChange = this.handleChange.bind(this);
     this.genreInputHandler = this.genreInputHandler.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+  };
+
+   handleReset() {
+ 
+    const values = [...this.state.defaultValues];
+
+    this.setState({...this.state, values});
+
   };
 
    handleChange(id, value) {

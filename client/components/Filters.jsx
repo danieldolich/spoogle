@@ -5,6 +5,7 @@ import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/core/Slider';
 
 
+
 const useStyles = makeStyles({
   root: {
     width: 300,
@@ -23,12 +24,24 @@ function Filters(props) {
     props.onChangeFunc(props.id, newValue)
     setValue(newValue);
   };
+
+  const handleReset = () => {
+    let max = props.parameterObj.max;
+    let min = props.parameterObj.min;
+    let newValue = [min, max];
+    console.log(newValue)
+    props.onChangeFunc(props.id, newValue)
+    setValue(newValue);
+  };
+
+
   return (
     <div className="sliding">
       <Typography id="range-slider" className="tooltip" gutterBottom>
         {props.parameterObj.displayName}
         <span className="tooltiptext">{props.parameterObj.description}</span>
       </Typography>
+      <img src="client/assets/reset.png" width='20px' alt="reset" onClick={handleReset}/>
       <Slider
         color="secondary"
         value={value}

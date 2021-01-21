@@ -14,6 +14,7 @@ const App = () => {
   const [ token, setToken ] = useState(cookies.get('token'));
   const [ currentTrack, setCurrentTrack ] = useState(undefined);
   const [ isPlaying, setIsPlaying ] = useState(false);
+  const [resultsCache, setResultsCache] = useState([])
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -75,6 +76,7 @@ const App = () => {
   };
 
   const submitSearch = (state) => {
+    console.log(state)
     if (!state.genreInput) return;
     const theQueryObj = { seed_genres: state.genreInput };
     for (let i = 0; i< state.values.length; i++) {
@@ -104,8 +106,11 @@ const App = () => {
     fetch('/apiSpot/rec?'+ querystring.stringify(theQueryObj))
       .then(data => data.json())
       .then(data => {
-        console.log(data);
+        let previousCache = [...resultsCache];
+        previousCache.push(data);
+        setResultsCache(previousCache);
         setResults(data);
+        console.log(resultsCache);
       });
   }
 
